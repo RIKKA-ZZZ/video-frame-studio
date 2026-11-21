@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="在浏览器里定位视频画面，将当前帧以原始尺寸导出为 PNG、JPG 或 WebP。">
+  <meta name="theme-color" content="#111115">
+  <title>取帧工作台 · 视频帧提取</title>
+  <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="style.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <svg class="symbols" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <symbol id="i-mark" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M8 3v18M16 3v18M3 9h5M3 15h5M16 9h5M16 15h5"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-3.5 8-10V5l-8-3-8 3v7c0 6.5 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></symbol>
+    <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v1M3 7v12h16a2 2 0 0 0 1.9-1.4L23 11H7l-4 8"/></symbol>
+    <symbol id="i-video" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m10 9 5 3-5 3Z"/></symbol>
+    <symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12m-5-5 5 5 5-5M5 15v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path fill="currentColor" stroke="none" d="M7 4.8a1 1 0 0 1 1.5-.9l12 7.2a1 1 0 0 1 0 1.8l-12 7.2a1 1 0 0 1-1.5-.9z"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24"><path d="M9 5v14M15 5v14" stroke-width="3"/></symbol>
+    <symbol id="i-prev" viewBox="0 0 24 24"><path d="M5 6v12m13-12-9 6 9 6Z"/></symbol>
+    <symbol id="i-next" viewBox="0 0 24 24"><path d="M19 6v12M6 6l9 6-9 6Z"/></symbol>
+    <symbol id="i-volume" viewBox="0 0 24 24"><path d="M3 9h4l5-4v14l-5-4H3Zm13 0a4 4 0 0 1 0 6m3-9a8 8 0 0 1 0 12"/></symbol>
+    <symbol id="i-muted" viewBox="0 0 24 24"><path d="M3 9h4l5-4v14l-5-4H3Zm13 1 5 5m0-5-5 5"/></symbol>
+    <symbol id="i-timeline" viewBox="0 0 24 24"><path d="M3 10v7m4-10v10m5-14v14m5-10v10m4-7v7M3 21h18"/></symbol>
+    <symbol id="i-keyboard" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M7 10h0m3 0h0m4 0h0m3 0h0M8 14h8"/></symbol>
+    <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+    <symbol id="i-edit" viewBox="0 0 24 24"><path d="m14 6 4 4M4 20l4.6-1 11-11a2.8 2.8 0 0 0-4-4l-11 11Z"/></symbol>
+    <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 16V4m-5 5 5-5 5 5M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+  </svg>
+
+  <header class="masthead">
+    <div class="shell masthead-inner">
+      <a class="identity" href="./" aria-label="取帧工作台首页">
+        <span class="brand-icon"><svg class="icon"><use href="#i-mark"/></svg></span>
+        <span>取帧<span class="identity-divider"></span><span class="identity-secondary">工作台</span></span>
+      </a>
+      <span class="privacy"><svg class="icon"><use href="#i-shield"/></svg> 本地处理 · 视频不上传</span>
+    </div>
+  </header>
+
+  <main class="shell workspace">
+    <section class="intro" aria-labelledby="page-title">
+      <div>
+        <h1 id="page-title">视频帧提取<span>.</span></h1>
+        <p>在时间轴上找到想要的画面，导出为原始尺寸的图片。</p>
+      </div>
+      <button class="open-button" id="open-video" type="button">
+        <svg class="icon"><use href="#i-folder"/></svg> 打开视频
+      </button>
+      <input type="file" id="file" class="sr-only" tabindex="-1" accept="video/*,.mkv,.avi,.m4v,.mov,.ogv,.mts,.m2ts">
+    </section>
+
+    <div class="layout">
+      <div class="main-column">
+        <section class="panel player-panel" aria-labelledby="preview-heading">
+          <div class="panel-heading">
+            <h2 id="preview-heading"><svg class="icon"><use href="#i-video"/></svg> 视频预览</h2>
+            <span class="source-tag" id="source-tag"><span></span> 示例视频</span>
+          </div>
+          <div class="stage" id="stage" aria-busy="true">
+            <video id="video" playsinline preload="auto" poster="assets/demo-poster.jpg" aria-label="当前视频预览"></video>
+            <div class="stage-corners" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+            <div class="drop-overlay" aria-hidden="true">
+              <svg class="icon"><use href="#i-upload"/></svg><strong>松开以打开视频</strong>
+            </div>
+            <div class="video-message" id="video-message" hidden>
+              <svg class="icon"><use href="#i-video"/></svg>
+              <strong id="message-title"></strong>
+              <span id="message-body"></span>
+              <button type="button" id="restore-demo" class="text-button">载入示例视频</button>
+            </div>
+          </div>
+          <div class="transport">
+            <div class="transport-side">
+              <button class="icon-button play-button" id="play" type="button" title="播放 / 暂停（空格）" aria-label="播放" disabled>
+                <svg class="icon"><use href="#i-play"/></svg>
+              </button>
+              <div class="step-buttons">
+                <button class="icon-button" id="prev" type="button" title="后退 0.1 秒（←）" aria-label="后退 0.1 秒" disabled><svg class="icon"><use href="#i-prev"/></svg></button>
+                <button class="icon-button" id="next" type="button" title="前进 0.1 秒（→）" aria-label="前进 0.1 秒" disabled><svg class="icon"><use href="#i-next"/></svg></button>
+              </div>
+              <span class="clock-readout"><span id="play-time">00:00.000</span><span class="clock-divider">/</span><span id="duration">00:00.000</span></span>
+            </div>
+            <button class="icon-button" id="mute" type="button" title="静音" aria-label="静音" disabled><svg class="icon"><use href="#i-volume"/></svg></button>
+          </div>
+        </section>
+
+        <section class="panel timeline-panel" aria-labelledby="timeline-heading">
+          <div class="panel-heading">
+            <h2 id="timeline-heading"><svg class="icon"><use href="#i-timeline"/></svg> 时间轴</h2>
+            <form class="time-form" id="time-form" title="输入时间，例如 4.25 或 00:04.250">
+              <label class="sr-only" for="time-entry">输入时间后按回车跳转</label>
+              <input id="time-entry" type="text" inputmode="text" autocomplete="off" spellcheck="false" value="00:00.000" maxlength="20" disabled>
+              <button type="submit" id="time-go" title="跳转到输入时间" aria-label="跳转到输入时间" disabled><svg class="icon"><use href="#i-edit"/></svg></button>
+            </form>
+          </div>
+          <div class="timeline-inner" id="timeline-inner">
+            <div class="time-ruler" aria-hidden="true" id="ruler"><span>00:00</span><span>00:03</span><span>00:06</span><span>00:09</span><span>00:12</span></div>
+            <div class="film-control">
+              <div class="filmstrip" id="filmstrip" aria-hidden="true"></div>
+              <div class="playhead" aria-hidden="true"></div>
+              <input id="scrubber" type="range" min="0" max="12" step="any" value="0" aria-label="视频时间轴" disabled>
+            </div>
+          </div>
+          <div class="shortcut-strip">
+            <svg class="icon"><use href="#i-keyboard"/></svg>
+            <span><kbd>空格</kbd> 播放 / 暂停</span>
+            <span><kbd>←</kbd><kbd>→</kbd> 微调 0.1 秒</span>
+          </div>
+        </section>
+      </div>
+
+      <aside class="side-column" aria-label="导出设置与视频信息">
+        <section class="panel export-panel" aria-labelledby="export-heading">
+          <div class="panel-heading">
+            <h2 id="export-heading"><svg class="icon"><use href="#i-image"/></svg> 导出图片</h2>
+          </div>
+          <div class="export-body">
+            <fieldset class="format-group">
+              <legend>文件格式</legend>
+              <div class="format-options">
+                <label><input type="radio" name="format" value="png" checked><span>PNG</span></label>
+                <label><input type="radio" name="format" value="jpg"><span>JPG</span></label>
+                <label><input type="radio" name="format" value="webp"><span>WebP</span></label>
+              </div>
+              <p id="format-note">无损图片，保留画面细节。</p>
+            </fieldset>
+            <div class="quality-row" id="quality-row" hidden>
+              <label for="quality">图片质量 <output id="quality-value" for="quality">92%</output></label>
+              <input type="range" id="quality" min="10" max="100" value="92">
+            </div>
+            <dl class="export-meta">
+              <div><dt>输出尺寸</dt><dd id="resolution">—</dd></div>
+              <div><dt>当前时间</dt><dd id="selected-time">00:00.000</dd></div>
+            </dl>
+            <button class="export-button" id="export" type="button" disabled>
+              <svg class="icon"><use href="#i-download"/></svg><span>导出当前帧</span>
+            </button>
+          </div>
+        </section>
+
+        <section class="panel details-panel" aria-labelledby="details-heading">
+          <div class="panel-heading">
+            <h2 id="details-heading"><svg class="icon"><use href="#i-mark"/></svg> 视频信息</h2>
+          </div>
+          <div class="details-body">
+            <div class="file-info">
+              <span class="file-icon"><svg class="icon"><use href="#i-video"/></svg></span>
+              <div><strong id="file-name">云海航拍.mp4</strong><span id="file-subtitle">示例视频</span></div>
+            </div>
+            <dl class="facts">
+              <div><dt>视频时长</dt><dd id="clip-length">—</dd></div>
+              <div><dt>文件大小</dt><dd id="clip-size">—</dd></div>
+            </dl>
+            <p class="drop-hint"><svg class="icon"><use href="#i-upload"/></svg> 也可将视频拖到预览区</p>
+          </div>
+        </section>
+        <div class="notification" id="notice" role="status" hidden>
+          <svg class="icon"><use href="#i-check"/></svg><span></span>
+        </div>
+      </aside>
+    </div>
+  </main>
+</body>
+</html>
